@@ -53,38 +53,18 @@ const App: React.FC = () => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [error, setError] = useState<string | null>(null); // For non-fatal, transient errors
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [view, setView] = useState<View>('orders');
+  const [view, setView] = useState<View>('dashboard');
   
   const [pendingOrderInfo, setPendingOrderInfo] = useState<{ id: string, isNewOrder: boolean } | null>(null);
 
-  // Effect to check API key status on component mount, primarily for AI Studio environment
+  // Effect to handle API key state
   useEffect(() => {
-    const checkApiKeyStatus = async () => {
-      // This check is primarily for the AI Studio environment to proactively prompt for a key.
-      // For other environments, we optimistically assume a key is present and let API call
-      // failures trigger the setup screen.
-      if (typeof window.aistudio !== 'undefined' && typeof window.aistudio.hasSelectedApiKey === 'function') {
-        const isSelected = await window.aistudio.hasSelectedApiKey();
-        if (!isSelected) {
-          setHasApiKeySelected(false);
-          // No error message is needed here; the dedicated UI for key selection is sufficient.
-        } else {
-          setHasApiKeySelected(true); // Ensure it's true if already selected
-          setAppWideError(null); // Clear any previous API key errors
-        }
-      } else {
-        // In a hosted environment, we rely solely on process.env.API_KEY being injected externally.
-        // We do NOT attempt to read it here directly in the frontend component's useEffect,
-        // as it might not be fully initialized or visible to frontend JS at this exact moment.
-        // Instead, we optimistically assume it will be available when `geminiService` calls it.
-        // The `geminiService` will throw an error if it's truly missing,
-        // and the error handling in `handleImageScan` will then prompt the user
-        // to configure the environment variable.
-        setHasApiKeySelected(true); // Default to true, let the API call logic determine if the key is bad
-        setAppWideError(null); // Clear any previous API key errors
-      }
-    };
-    checkApiKeyStatus();
+    // Optimistically assume the API key is present on initial load.
+    // The error handling within `handleImageScan` will catch any actual API key issues
+    // when the user attempts to scan an image, and will then prompt for a key.
+    // This provides a better user experience by not blocking the UI upfront.
+    setHasApiKeySelected(true);
+    setAppWideError(null);
   }, []); // Run only once on mount.
 
   const handleImageScan = useCallback(async (file: File) => {

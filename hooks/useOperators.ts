@@ -36,37 +36,29 @@ export const useOperators = ({ onFatalError }: UseOperatorsProps = {}) => {
   }, [isLoading, onFatalError]);
 
   const addOperator = useCallback(async (operator: Operator) => {
-    if (operators.some(op => op.id === operator.id)) {
-        alert(`El preparador con la cédula ${operator.id} ya existe.`);
-        return;
-    }
-
     try {
-        await firebaseService.save(OPERATORS_COLLECTION, operator);
-        // State will be updated by the listener
+      await firebaseService.save(OPERATORS_COLLECTION, operator);
     } catch (error) {
-        console.error("Error saving operator to Firebase", error);
-        alert("No se pudo guardar el preparador.");
+      console.error("Error adding operator", error);
+      alert("No se pudo añadir el preparador.");
     }
-  }, [operators]);
+  }, []);
 
   const updateOperator = useCallback(async (operator: Operator) => {
     try {
       await firebaseService.save(OPERATORS_COLLECTION, operator);
-      // State will be updated by the listener
     } catch (error) {
-      console.error("Error updating operator in Firebase", error);
+      console.error("Error updating operator", error);
       alert("No se pudo actualizar el preparador.");
     }
   }, []);
 
   const removeOperator = useCallback(async (operatorId: string) => {
     try {
-        await firebaseService.remove(OPERATORS_COLLECTION, operatorId);
-        // State will be updated by the listener
+      await firebaseService.remove(OPERATORS_COLLECTION, operatorId);
     } catch (error) {
-        console.error("Error removing operator from Firebase", error);
-        alert("No se pudo eliminar el preparador.");
+      console.error("Error removing operator", error);
+      alert("No se pudo eliminar el preparador.");
     }
   }, []);
 

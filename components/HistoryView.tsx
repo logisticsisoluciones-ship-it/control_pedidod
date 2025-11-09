@@ -35,15 +35,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ orders, operators, onC
         const orderEndTime = new Date(order.endTime).getTime();
 
         if (startDate) {
-            // FIX: More robustly parse date to ensure it's treated as start of day in local timezone.
-            const [year, month, day] = startDate.split('-').map(Number);
-            const filterStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+            // FIX: Parse date string as UTC to avoid timezone issues between dev and prod.
+            const filterStart = new Date(`${startDate}T00:00:00.000Z`);
             if (orderEndTime < filterStart.getTime()) return false;
         }
         if (endDate) {
-            // FIX: More robustly parse date to ensure it's treated as end of day in local timezone.
-            const [year, month, day] = endDate.split('-').map(Number);
-            const filterEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+            // FIX: Parse date string as UTC to avoid timezone issues between dev and prod.
+            const filterEnd = new Date(`${endDate}T23:59:59.999Z`);
             if (orderEndTime > filterEnd.getTime()) return false;
         }
         return true;

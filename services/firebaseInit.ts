@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyB3irx0Hb4lVypD5GpOdk_sKbQedmGgSBI",
   authDomain: "logistic-si-soluciones.firebaseapp.com",
   projectId: "logistic-si-soluciones",
-  storageBucket: "logistic-si-soluciones.firebasestorage.app", // Corrected from firebasestorage.app
+  storageBucket: "logistic-si-soluciones.appspot.com",
   messagingSenderId: "63354489563",
   appId: "1:63354489563:web:f82881c266e2df93a99afe",
   measurementId: "G-H3B53C9W7P"

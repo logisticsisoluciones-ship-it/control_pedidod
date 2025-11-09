@@ -41,26 +41,19 @@ export const extractOrderNumberFromImage = async (base64Image: string, mimeType:
     }
 
     return text;
-  } catch (error: any) {
-    console.error("Error calling Gemini API:", error);
 
-    // Provide specific error messages for common API key issues
-    if (error.message && typeof error.message === 'string') {
-      if (error.message.includes("API key must be a non-empty string") || error.message.includes("clave de API de Gemini no está configurada")) {
-        // This is for the explicit check where API_KEY is empty.
-        throw new Error("GEMINI_API_KEY_MISSING: La clave de API de Gemini no está configurada o es inválida.");
-      }
-      // This catches the specific Gemini API error response for an invalid key
-      if (error.message.includes("API key not valid") || error.message.includes("INVALID_ARGUMENT")) {
-        throw new Error("GEMINI_API_KEY_INVALID: La clave de API de Gemini no es válida. Por favor, configúrala correctamente.");
-      }
-      // This specific error message (from the guidelines) indicates a problem requiring key re-selection.
-      if (error.message.includes("Requested entity was not found.")) {
-        throw new Error("GEMINI_AUTH_ERROR: Error de autenticación o clave de API de Gemini inválida. Por favor, vuelve a seleccionar tu clave.");
-      }
+  } catch (error: any) {
+    console.error("Error en la llamada a Gemini API:", error);
+    if (error.message && (error.message.includes('API key not valid') || error.message.includes('PERMISSION_DENIED'))) {
+        throw new Error("GEMINI_API_KEY_INVALID: La clave de API de Gemini no es válida o ha caducado. Por favor, selecciona una nueva.");
     }
-    
-    // Fallback for other errors
-    throw new Error("Hubo un problema al analizar la imagen. Por favor, intente de nuevo.");
+     if (error.message && error.message.includes('not found')) { // Vercel might throw this for env vars
+        throw new Error("GEMINI_AUTH_ERROR: La clave de API no se encontró en el entorno. Asegúrate de que VITE_API_KEY esté configurada en Vercel.");
+    }
+    if (error.message && error.message.includes('GEMINI_API_KEY_MISSING')) {
+        throw error; // Re-throw the custom error to be caught by the App component
+    }
+    // Generic error for other issues (network, etc.)
+    throw new Error("No se pudo comunicar con el servicio de IA para analizar la imagen.");
   }
 };

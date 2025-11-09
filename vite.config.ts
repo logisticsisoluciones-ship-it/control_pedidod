@@ -1,12 +1,11 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { cwd } from 'process';
+import process from 'process';
 
 export default defineConfig(({ mode }) => {
   // Carga las variables de entorno basadas en el modo actual (desarrollo/producción).
   // Es crucial cargar SOLO las variables con el prefijo 'VITE_' para que Vite las exponga de forma segura al frontend.
-  // FIX: Use cwd() from the 'process' module to avoid a TypeScript error where the global process object's type was missing the 'cwd' method.
-  const env = loadEnv(mode, cwd(), 'VITE_');
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
 
   return {
     plugins: [react()],

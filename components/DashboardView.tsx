@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Order, Operator } from '../types';
-import { calculateDuration } from '../utils/timeUtils';
+import { formatDurationFromMillis } from '../utils/timeUtils';
 import { BarChart } from './BarChart';
 import { PieChart } from './PieChart';
 
@@ -34,15 +34,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ orders, operators 
             const orderTime = orderDate.getTime();
             
             if (startDate) {
-                // FIX: More robustly parse date to ensure it's treated as start of day in local timezone.
-                const [year, month, day] = startDate.split('-').map(Number);
-                const filterStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+                // FIX: Parse date string as UTC to avoid timezone issues.
+                const filterStart = new Date(`${startDate}T00:00:00.000Z`);
                 if (orderTime < filterStart.getTime()) return false;
             }
             if (endDate) {
-                // FIX: More robustly parse date to ensure it's treated as end of day in local timezone.
-                const [year, month, day] = endDate.split('-').map(Number);
-                const filterEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+                // FIX: Parse date string as UTC to avoid timezone issues.
+                const filterEnd = new Date(`${endDate}T23:59:59.999Z`);
                 if (orderTime > filterEnd.getTime()) return false;
             }
             return true;
@@ -50,26 +48,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ orders, operators 
     }, [orders, startDate, endDate]);
 
     const stats = useMemo(() => {
-        const completedFilteredOrders = filteredOrders.filter(o => !!o.endTime);
+        const completedFilteredOrders = filteredOrders.filter(o => !!o.endTime && !!o.startTime);
         const totalCompletedOrders = completedFilteredOrders.length;
         
+        // Calculate pie chart data regardless of completed orders
+        const statusCounts = filteredOrders.reduce((acc, order) => {
+            if (order.endTime) acc.completed += 1;
+            else if (order.startTime) acc.inProcess += 1;
+            else if (order.pendingStatus === 'pendiente') acc.pending += 1;
+            else acc.toBePrepared += 1;
+            return acc;
+        }, { completed: 0, inProcess: 0, toBePrepared: 0, pending: 0 });
+
+         const pieChartData = [
+            { label: 'Completados', value: statusCounts.completed, color: 'bg-green-500' },
+            { label: 'En Proceso', value: statusCounts.inProcess, color: 'bg-yellow-500' },
+            { label: 'Por Preparar', value: statusCounts.toBePrepared, color: 'bg-blue-500' },
+            { label: 'Pendientes', value: statusCounts.pending, color: 'bg-gray-500' },
+        ].filter(item => item.value > 0);
+
         if (totalCompletedOrders === 0) {
-            // Still calculate pie chart data even if no orders are completed
-            const statusCounts = filteredOrders.reduce((acc, order) => {
-                if (order.endTime) acc.completed += 1;
-                else if (order.startTime) acc.inProcess += 1;
-                else if (order.pendingStatus === 'pendiente') acc.pending += 1;
-                else acc.toBePrepared += 1;
-                return acc;
-            }, { completed: 0, inProcess: 0, toBePrepared: 0, pending: 0 });
-
-             const pieChartData = [
-                { label: 'Completados', value: statusCounts.completed, color: 'bg-green-500' },
-                { label: 'En Proceso', value: statusCounts.inProcess, color: 'bg-yellow-500' },
-                { label: 'Por Preparar', value: statusCounts.toBePrepared, color: 'bg-blue-500' },
-                { label: 'Pendientes', value: statusCounts.pending, color: 'bg-gray-500' },
-            ].filter(item => item.value > 0);
-
             return {
                 totalCompletedOrders: '0',
                 avgWaitTime: 'N/A',
@@ -82,17 +80,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ orders, operators 
         }
 
         const totalWaitTime = completedFilteredOrders.reduce((acc, order) => {
-            if (!order.startTime) return acc;
-            return acc + (new Date(order.startTime).getTime() - new Date(order.creationTime).getTime());
+            return acc + (new Date(order.startTime!).getTime() - new Date(order.creationTime).getTime());
         }, 0);
 
         const totalPrepTime = completedFilteredOrders.reduce((acc, order) => {
-            if (!order.startTime || !order.endTime) return acc;
-            return acc + (new Date(order.endTime).getTime() - new Date(order.startTime).getTime());
+            return acc + (new Date(order.endTime!).getTime() - new Date(order.startTime!).getTime());
         }, 0);
         
-        const avgWaitTime = calculateDuration(null, new Date(totalWaitTime / totalCompletedOrders).toISOString());
-        const avgPrepTime = calculateDuration(null, new Date(totalPrepTime / totalCompletedOrders).toISOString());
+        const avgWaitTime = formatDurationFromMillis(totalWaitTime / totalCompletedOrders);
+        const avgPrepTime = formatDurationFromMillis(totalPrepTime / totalCompletedOrders);
         
         const ordersByDayMap = new Map<string, number>();
         completedFilteredOrders.forEach(order => {
@@ -107,21 +103,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ orders, operators 
             ordersByOperatorMap.set(operatorName, (ordersByOperatorMap.get(operatorName) || 0) + 1);
         });
         const ordersByOperator = Array.from(ordersByOperatorMap, ([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
-        
-        const statusCounts = filteredOrders.reduce((acc, order) => {
-            if (order.endTime) acc.completed += 1;
-            else if (order.startTime) acc.inProcess += 1;
-            else if (order.pendingStatus === 'pendiente') acc.pending += 1;
-            else acc.toBePrepared += 1;
-            return acc;
-        }, { completed: 0, inProcess: 0, toBePrepared: 0, pending: 0 });
-
-        const pieChartData = [
-            { label: 'Completados', value: statusCounts.completed, color: 'bg-green-500' },
-            { label: 'En Proceso', value: statusCounts.inProcess, color: 'bg-yellow-500' },
-            { label: 'Por Preparar', value: statusCounts.toBePrepared, color: 'bg-blue-500' },
-            { label: 'Pendientes', value: statusCounts.pending, color: 'bg-gray-500' },
-        ].filter(item => item.value > 0);
 
         const operatorPerformance = operators.map(operator => {
             const operatorOrders = completedFilteredOrders.filter(
@@ -136,7 +117,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ orders, operators 
                 id: operator.id,
                 name: operator.name,
                 totalOrders: operatorOrders.length,
-                avgPrepTime: calculateDuration(null, new Date(totalPrep / operatorOrders.length).toISOString()),
+                avgPrepTime: formatDurationFromMillis(totalPrep / operatorOrders.length),
             };
         }).filter(Boolean).sort((a, b) => b!.totalOrders - a!.totalOrders) as { id: string; name: string; totalOrders: number; avgPrepTime: string }[];
 
