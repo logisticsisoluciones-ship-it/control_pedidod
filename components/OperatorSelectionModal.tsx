@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Operator } from '../types';
 

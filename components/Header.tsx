@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ListIcon } from './icons/ListIcon';
 import { ClockIcon } from './icons/ClockIcon';
@@ -35,10 +34,11 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onViewChange }) => 
     <header className="bg-gray-800/80 backdrop-blur-sm shadow-lg sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-baseline space-x-2">
             <h1 className="text-xl font-bold text-cyan-400 tracking-wider">
               Control de Pedidos
             </h1>
+            <span className="text-xs text-gray-500 font-mono">v1.1</span>
           </div>
           <nav className="flex items-center space-x-1 sm:space-x-2">
             <NavButton

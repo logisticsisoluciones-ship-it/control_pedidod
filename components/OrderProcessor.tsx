@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { CameraIcon } from './icons/CameraIcon';
 

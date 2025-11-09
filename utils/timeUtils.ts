@@ -1,4 +1,3 @@
-
 export const formatDateTime = (isoString: string): string => {
   return new Date(isoString).toLocaleString('es-ES', {
     hour: '2-digit',

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Operator } from '../types';
 import { UserGroupIcon } from './icons/UserGroupIcon';

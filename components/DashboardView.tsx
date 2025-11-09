@@ -34,14 +34,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ orders, operators 
             const orderTime = orderDate.getTime();
             
             if (startDate) {
-                const filterStartTime = new Date(startDate).getTime();
-                if (orderTime < filterStartTime) return false;
+                // FIX: More robustly parse date to ensure it's treated as start of day in local timezone.
+                const [year, month, day] = startDate.split('-').map(Number);
+                const filterStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+                if (orderTime < filterStart.getTime()) return false;
             }
             if (endDate) {
-                const endOfDay = new Date(endDate);
-                endOfDay.setHours(23, 59, 59, 999);
-                const filterEndTime = endOfDay.getTime();
-                if (orderTime > filterEndTime) return false;
+                // FIX: More robustly parse date to ensure it's treated as end of day in local timezone.
+                const [year, month, day] = endDate.split('-').map(Number);
+                const filterEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+                if (orderTime > filterEnd.getTime()) return false;
             }
             return true;
         });

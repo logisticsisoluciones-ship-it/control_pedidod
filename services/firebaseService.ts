@@ -1,4 +1,3 @@
-
 import { collection, doc, onSnapshot, setDoc, deleteDoc, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebaseInit';
 

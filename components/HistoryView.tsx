@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Order, Operator } from '../types';
 import { formatDateTime, calculateDuration } from '../utils/timeUtils';
@@ -36,14 +35,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ orders, operators, onC
         const orderEndTime = new Date(order.endTime).getTime();
 
         if (startDate) {
+            // FIX: More robustly parse date to ensure it's treated as start of day in local timezone.
             const [year, month, day] = startDate.split('-').map(Number);
-            const filterStartTime = Date.UTC(year, month - 1, day, 0, 0, 0, 0);
-            if (orderEndTime < filterStartTime) return false;
+            const filterStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+            if (orderEndTime < filterStart.getTime()) return false;
         }
         if (endDate) {
+            // FIX: More robustly parse date to ensure it's treated as end of day in local timezone.
             const [year, month, day] = endDate.split('-').map(Number);
-            const filterEndTime = Date.UTC(year, month - 1, day, 23, 59, 59, 999);
-            if (orderEndTime > filterEndTime) return false;
+            const filterEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+            if (orderEndTime > filterEnd.getTime()) return false;
         }
         return true;
     });

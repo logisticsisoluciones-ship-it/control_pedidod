@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Order } from '../types';
 import * as firebaseService from '../services/firebaseService';
@@ -45,10 +44,14 @@ export const useOrders = ({ onFatalError }: UseOrdersProps = {}) => {
             if (isLoading) {
                 setIsLoading(false);
             }
-        }, (error) => {
+        }, (error: any) => {
             console.error("Error listening to orders collection:", error);
             if (onFatalError) {
-              onFatalError("No se pudo conectar a la base de datos de pedidos. Por favor, verifica tu configuración de Firebase.");
+              if (error.code === 'permission-denied') {
+                onFatalError("Error de Permiso: La aplicación no tiene permiso para leer la base de datos de pedidos. Por favor, verifica las reglas de seguridad de Firestore.");
+              } else {
+                onFatalError("No se pudo conectar a la base de datos de pedidos. Por favor, verifica tu configuración de Firebase.");
+              }
             } else {
               alert("No se pudo conectar a la base de datos de pedidos.");
             }
