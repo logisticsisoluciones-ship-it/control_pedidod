@@ -1,0 +1,7 @@
+{
+  "name": "Control de Tiempos de Pedidos",
+  "description": "Una aplicación para registrar los tiempos de inicio y finalización de la preparación de pedidos mediante el escaneo de documentos con la cámara.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
